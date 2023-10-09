@@ -2,25 +2,21 @@
 import React, { useEffect, useState } from 'react'
 import { Content } from 'antd/es/layout/layout';
 import { Card, Col, Row, Statistic } from 'antd';
-import { ArrowUpOutlined, UserOutlined } from '@ant-design/icons';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { UserOutlined } from '@ant-design/icons';
+import { collection, getDocs, query } from 'firebase/firestore';
 
 import { firestore } from 'config/firebase';
+import { useCourseContext } from 'contexts/CourseContext';
 
 export default function Dashboard() {
+  const {dbCourses} = useCourseContext()
   const [totalActiveCourse,setTotalActiveCourse] = useState("")
   const [totalStudents,setTotalStudents] = useState("")
-  const getCourse = async () => {
-    const q  = query(collection(firestore, "courses"), where('courseStatus','==','active'))
-      const querySnapshot = await getDocs(q);
-    const coursesArray = []
-    querySnapshot.forEach((doc) => {
-        coursesArray.push(doc.data())
-        const totalCourses = coursesArray.length;
-        setTotalActiveCourse(totalCourses)
-      
-    });
-    
+  const getCourse = () => {
+    const activeCourses = dbCourses.filter(course=>{
+      return course.courseStatus == 'active'
+    })
+    setTotalActiveCourse(activeCourses.length)
 }
 const getStudents = async () => {
   const q  = query(collection(firestore, "students"))
@@ -62,7 +58,7 @@ useEffect(()=>{
                 value={totalActiveCourse}
                 precision={0}
                 valueStyle={{ color: '#65A7FF'}}
-                prefix={<i class="bi bi-book"></i>}
+                prefix={<i className="bi bi-book"></i>}
               />
             </Card>
           </Col>

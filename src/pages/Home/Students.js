@@ -2,28 +2,27 @@ import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { Button, Col, Drawer, Form, Input, Row, Select, Space, message } from 'antd'
 import Search from 'antd/es/input/Search'
 import { firestore } from 'config/firebase';
+import CourseContextProvider, { useCourseContext } from 'contexts/CourseContext';
 
-import { addDoc, collection, deleteDoc, doc, getDocs, query, setDoc, updateDoc, where } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, getDocs, query, updateDoc, where } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 const { Option } = Select;
 const initState = { studentName: '', studentId: '', studentEmail: '', studentPhoneNo: '', studentHomeAdd: '' }
 
 export default function Students() {
-
+    const {dbCourses, setDbCourses} = useCourseContext()
     const [form] = Form.useForm();
     const [isSubmitLoading, setSubmitLoading] = useState(false);
     const [state, setState] = useState(initState);
     const [open, setOpen] = useState(false);
     const [openUpdate, setOpenUpdate] = useState(false);
-    const [courses, setCourses] = useState([]);
     const [students, setStudents] = useState([]);
     const [studentCourse, setStudentCourse] = useState('');
     const [editStudent, setEditStudent] = useState({});
 
     const showDrawer = () => {
         setOpen(true);
-        getCourse()
-        console.log(courses)
+        
     };
     const onClose = () => {
         setOpen(false);
@@ -34,16 +33,7 @@ export default function Students() {
     const handleChange = e => {
         setState(s => ({ ...s, [e.target.name]: e.target.value }))
     }
-    const getCourse = async () => {
-        const q  = query(collection(firestore, "courses"), where('courseStatus','==','active'))
-        const querySnapshot = await getDocs(q);
-        const coursesArray = []
-        querySnapshot.forEach((doc) => {
-            coursesArray.push(doc.data())
-
-            setCourses(coursesArray)
-        });
-    }
+    
     const getStudents = async () => {
         const querySnapshot = await getDocs(collection(firestore, "students"));
         const studentArray = []
@@ -132,7 +122,7 @@ export default function Students() {
     }
     useEffect(() => {
         getStudents()
-        getCourse()
+    
     }, [])
     return (
         <div className='student-main'>
@@ -154,7 +144,7 @@ export default function Students() {
             </div>
             <div className="main-side">
                 <div className="table-responsive">
-                    <table class="table">
+                    <table className="table">
                         <thead>
                             <tr>
                                 <th scope="col">#</th>
@@ -169,7 +159,7 @@ export default function Students() {
                         </thead>
                         <tbody>
                             {
-                                students == "" ?
+                                students === "" ?
                                     <th className='text-center'>No Data Found</th>
                                     :
                                     students.map((students, i) => {
@@ -259,7 +249,7 @@ export default function Students() {
                             >
                                 <Select name="studentCourse" onChange={(value) => { setStudentCourse(value) }} placeholder="Please choose the student course">
                                     {
-                                        courses.map((course, i) => {
+                                        dbCourses.map((course, i) => {
                                             return <Option key={i} value={course.courseId}>{course.courseName}</Option>
 
                                         })
@@ -350,7 +340,7 @@ export default function Students() {
                             <select name="student" className='form-control mb-3'>
                                 <option selected disabled>Select student course</option>
                                 {
-                                    courses.map((course,i)=>{
+                                    dbCourses.map((course,i)=>{
                                         return <option key={i} value={course.courseId} >{course.courseName}</option>
                                     })
                                 }

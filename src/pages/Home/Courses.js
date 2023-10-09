@@ -2,18 +2,19 @@ import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
 import { Button, Col, Drawer, Form, Input, Row, Select, Space, Tooltip, message } from 'antd'
 import Search from 'antd/es/input/Search'
 import { firestore } from 'config/firebase';
-import { addDoc, collection, doc, getDocs, setDoc, updateDoc } from 'firebase/firestore';
+import { useCourseContext } from 'contexts/CourseContext';
+import { addDoc, collection, deleteDoc, doc, getDocs, setDoc, updateDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react'
 const { Option } = Select;
 const initState = { courseName: '', courseId: '', courseDes: '' }
 
 export default function Courses() {
+    const { dbCourses, setDbCourses } = useCourseContext()
     const [form] = Form.useForm();
     const [isSubmitLoading, setSubmitLoading] = useState(false);
     const [state, setState] = useState(initState);
     const [courseStatus, setCourseStatus] = useState('')
     const [open, setOpen] = useState(false);
-    const [courses, setCourses] = useState([]);
     const showDrawer = () => {
         setOpen(true);
     };
@@ -23,14 +24,22 @@ export default function Courses() {
     const handleChange = e => {
         setState(s => ({ ...s, [e.target.name]: e.target.value }))
     }
-    const getCourse = async () => {
-        const querySnapshot = await getDocs(collection(firestore, "courses"));
-        const coursesArray = []
-        querySnapshot.forEach((doc) => {
-            coursesArray.push(doc.data())
 
-            setCourses(coursesArray)
-        });
+    // Delete Course Function
+    const handleDelete = async (id) => {
+
+        try {
+            await deleteDoc(doc(firestore, "courses", id));
+            message.success("Course deleted successfully")
+            const afterDeleteCourse = dbCourses.filter((course) => {
+                return course.id != id
+            })
+            console.log(afterDeleteCourse)
+            setDbCourses(afterDeleteCourse)
+
+        } catch (e) {
+            console.log(e.error)
+        }
     }
     const handleSubmit = async () => {
 
@@ -43,7 +52,7 @@ export default function Courses() {
             courseDes,
             createdAt: new Date(),
         }
-        console.log(courseData)
+
         if (courseData.courseName === "") {
             message.warning("Please enter course name")
             return;
@@ -65,11 +74,23 @@ export default function Courses() {
             const docRefAdd = await addDoc(collection(firestore, "courses"), courseData);
             // Update the timestamp field with the value from the server
             const docRef = doc(firestore, 'courses', docRefAdd.id);
-            const updateID = await updateDoc(docRef, {
+            await updateDoc(docRef, {
                 id: docRef.id
             });
             message.success('Course added successfully');
             setSubmitLoading(false)
+            courseData = {
+                id: docRef.id,
+                courseName,
+                courseId,
+                courseStatus,
+                courseDes,
+                createdAt: new Date(),
+            }
+            const arr = [];
+            arr.push(courseData)
+            console.log(arr)
+            setDbCourses(arr)
             form.resetFields();
         } catch (error) {
             setSubmitLoading(false)
@@ -78,9 +99,6 @@ export default function Courses() {
 
     }
 
-    useEffect(() => {
-        getCourse()
-    }, [])
     return (
         <div className='course-main'>
             <div className="top-side">
@@ -101,7 +119,7 @@ export default function Courses() {
             </div>
             <div className="main-side">
                 <div className="table-responsive">
-                    <table class="table">
+                    <table className="table">
                         <thead>
                             <tr>
                                 <th scope="col">#</th>
@@ -114,24 +132,23 @@ export default function Courses() {
                         </thead>
                         <tbody>
                             {
-                                courses.map((course, i) => {
-                                    return(
+                                dbCourses.map((course, i) => {
+                                    return (
                                         <tr key={i}>
-                                            <th scope="row">{i+1}</th>
+                                            <th scope="row">{i + 1}</th>
                                             <td>{course.courseName}</td>
                                             <td>{course.courseId}</td>
                                             <td>{course.courseDes}</td>
-                                            <td style={{fontSize:'14px'}}>{course.courseStatus=="active"?<Tooltip  title="Active"> <i class="bi bi-check-circle text-success"></i> </Tooltip> : <Tooltip title="Unactive"> <i class="bi bi-x-circle text-danger"></i> </Tooltip>}</td>
+                                            <td style={{ fontSize: '14px', textAlign: 'center' }}>{course.courseStatus == "active" ? <Tooltip title="Active"> <i className="bi bi-check-circle text-success"></i> </Tooltip> : <Tooltip title="Unactive"> <i className="bi bi-x-circle text-danger"></i> </Tooltip>}</td>
                                             <td>
-                                            <Space>
-                                            <Space>
-                                                        <Button type="dashed"  icon={<DeleteOutlined />}  danger />
-                                                        <Button type="dashed"   icon={<EditOutlined />} />
-                                                    </Space>
-                                            </Space>
+                                                <Space>
+                                                    <Button type="dashed" onClick={() => handleDelete(course.id)} icon={<DeleteOutlined />} danger />
+                                                    <Button type="dashed" icon={<EditOutlined />} />
+                                                </Space>
+
                                             </td>
                                         </tr>)
-                                    
+
                                 })
                             }
 
