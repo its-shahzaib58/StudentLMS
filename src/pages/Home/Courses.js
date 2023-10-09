@@ -1,20 +1,20 @@
-import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
-import { Button, Col, Drawer, Form, Input, Row, Select, Space, Tooltip, message } from 'antd'
+import { DeleteOutlined, EditOutlined, WarningFilled, WarningOutlined, } from '@ant-design/icons'
+import { Button, Col, Drawer, Empty, Form, Modal, Popconfirm, Row, Space, Tooltip, message } from 'antd'
 import Search from 'antd/es/input/Search'
 import { firestore } from 'config/firebase';
 import { useCourseContext } from 'contexts/CourseContext';
-import { addDoc, collection, deleteDoc, doc, getDocs, setDoc, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react'
-const { Option } = Select;
-const initState = { courseName: '', courseId: '', courseDes: '' }
+const initState = { courseName: '', courseId: '', courseDes: '', courseStatus: '' }
 
 export default function Courses() {
-    const { dbCourses, setDbCourses } = useCourseContext()
+    const { dbCourses, setDbCourses } = useCourseContext();
     const [form] = Form.useForm();
     const [isSubmitLoading, setSubmitLoading] = useState(false);
     const [state, setState] = useState(initState);
-    const [courseStatus, setCourseStatus] = useState('')
+    const [search, setSearch] = useState('');
     const [open, setOpen] = useState(false);
+
     const showDrawer = () => {
         setOpen(true);
     };
@@ -43,7 +43,7 @@ export default function Courses() {
     }
     const handleSubmit = async () => {
 
-        const { courseName, courseId, courseDes } = state
+        const { courseName, courseId, courseDes, courseStatus } = state
         var courseData = {
             id: '',
             courseName,
@@ -83,9 +83,9 @@ export default function Courses() {
             courseData['id'] = docRefAdd.id
             const arr = dbCourses;
             arr.push(courseData)
-            console.log(arr)
             setDbCourses(arr)
             form.resetFields();
+            setState(initState)
         } catch (error) {
             setSubmitLoading(false)
             console.log(error)
@@ -98,14 +98,14 @@ export default function Courses() {
             <div className="top-side">
                 <div className="search">
                     <Search
-                        placeholder="Search courses"
-
+                        placeholder="Search course via course name"
+                        onChange={(e) => setSearch(e.target.value.toLowerCase().trim())}
                         style={{
                             width: 300,
                         }}
                     />
                 </div>
-                <div className="add">
+                <div className="add py-1">
                     <Button type="primary" onClick={showDrawer} size='middle' icon={<i className="bi bi-clipboard2-plus"></i>}>
                         Add New Course
                     </Button>
@@ -124,9 +124,15 @@ export default function Courses() {
                                 <th scope="col">Actions</th>
                             </tr>
                         </thead>
+
                         <tbody>
                             {
-                                dbCourses.map((course, i) => {
+                                dbCourses.filter((course) => {
+                                    return search === '' 
+                                    ? course 
+                                    : course.courseName.toLowerCase().includes(search) ||
+                                     course.courseId.toLowerCase().includes(search) 
+                                }).map((course, i) => {
                                     return (
                                         <tr key={i}>
                                             <th scope="row">{i + 1}</th>
@@ -136,7 +142,16 @@ export default function Courses() {
                                             <td style={{ fontSize: '14px', textAlign: 'center' }}>{course.courseStatus === "active" ? <Tooltip title="Active"> <i className="bi bi-check-circle text-success"></i> </Tooltip> : <Tooltip title="Unactive"> <i className="bi bi-x-circle text-danger"></i> </Tooltip>}</td>
                                             <td>
                                                 <Space>
-                                                    <Button type="dashed" onClick={() => handleDelete(course.id)} icon={<DeleteOutlined />} danger />
+                                                    <Popconfirm
+                                                        title="Delete the course"
+                                                        description="Are you sure to delete this course"
+                                                        onConfirm={() => handleDelete(course.id)}
+
+                                                        okText="Yes"
+
+                                                    >
+                                                        <Button type="dashed" icon={<DeleteOutlined />} danger />
+                                                    </Popconfirm>
                                                     <Button type="dashed" icon={<EditOutlined />} />
                                                 </Space>
 
@@ -145,9 +160,20 @@ export default function Courses() {
 
                                 })
                             }
-
                         </tbody>
                     </table>
+
+                    {
+                        dbCourses.length === 0 ?
+
+                            <div className='text-center'>
+                                <Empty />
+                            </div>
+                            :
+                            <>
+                            </>
+                    }
+
                 </div>
             </div>
             <Drawer
@@ -172,70 +198,35 @@ export default function Courses() {
                 >
                     <Row gutter={16}>
                         <Col span={12}>
-                            <Form.Item
-                                name="courseName"
-                                label="Course Name"
-                                rules={[
-                                    {
-                                        required: true,
+                            <label><b className='text-danger'>*</b>Course Name </label>
+                            <input className='form-control mb-4' name="courseName" value={state.courseName} onChange={handleChange} placeholder="Please enter course name" />
 
-                                    },
-                                ]}
-                            >
-                                <Input name="courseName" value={state.courseName} onChange={handleChange} placeholder="Please enter course name" />
-                            </Form.Item>
                         </Col>
                         <Col span={12}>
-                            <Form.Item
-                                name="courseId"
-                                label="Course ID"
-                                rules={[
-                                    {
-                                        required: true,
-
-                                    },
-                                ]}
-                            >
-                                <Input name='courseId' value={state.courseId} onChange={handleChange} placeholder="Please enter course id" />
-                            </Form.Item>
+                            <label><b className='text-danger'>*</b>Course Code </label>
+                            <input className='form-control mb-4' name='courseId' value={state.courseId} onChange={handleChange} placeholder="Please enter course id" />
                         </Col>
                         <Col span={24}>
-                            <Form.Item
-                                name="status"
-                                label="Status"
-                                rules={[
-                                    {
-                                        required: true,
-                                        message: 'Please choose the type',
-                                    },
-                                ]}
-                            >
-                                <Select name="courseStatus" onChange={(value) => setCourseStatus(value)} placeholder="Please choose the course status">
-                                    <Option value="active">Active</Option>
-                                    <Option value="unactive">Unactive</Option>
-                                </Select>
-                            </Form.Item>
+                            <label><b className='text-danger'>*</b>Course Status </label>
+                            <select className='form-control mb-4' name="courseStatus" onChange={handleChange} placeholder="Please choose the course status">
+                                <option selected disabled>Select course status</option>
+                                <option value="active">Active</option>
+                                <option value="unactive">Unactive</option>
+                            </select>
+
                         </Col>
                     </Row>
                     <Row gutter={16}>
                         <Col span={24}>
-                            <Form.Item
-                                name="courseDes"
-                                label="Description"
-                                rules={[
-                                    {
-                                        required: true,
-                                        message: 'please enter course description',
-                                    },
-                                ]}
-                            >
-                                <Input.TextArea rows={4} value={state.courseDes} name='courseDes' onChange={handleChange} placeholder="Please enter course description" />
-                            </Form.Item>
+                            <label><b className='text-danger'>*</b>Course Description </label>
+                            <textarea className='form-control mb-4' rows={4} value={state.courseDes} name='courseDes' onChange={handleChange} placeholder="Please enter course description" />
+
                         </Col>
                     </Row>
 
                 </Form>
             </Drawer>
+
         </div>
     )
 }

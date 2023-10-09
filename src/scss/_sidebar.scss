@@ -1,8 +1,15 @@
 @import '../css-config/mixins.scss';
 .sidebar{
+    display: none;
+    text-align: center;
     background-color: #62BC47;
+    @include md{
+        display: block;
+        width: 20%;
+    }
     .ant-divider{
         display: none;
+        text-align: center;
         @include md{
             color: white;
             display: block;

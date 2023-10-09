@@ -1,0 +1,7 @@
+@import '../css-config/mixins.scss';
+.content{
+    width: 100%;
+    @include md{
+        width: 80%;
+    }
+}

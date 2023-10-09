@@ -10,7 +10,7 @@ export default function Sider() {
 
 
     return (
-        <div className='sidebar p-2'>
+        <div className=' p-2'>
             <div>
                 <Divider style={{ fontSize: 24 }}>
                     Dashboard

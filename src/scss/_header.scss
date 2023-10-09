@@ -1,0 +1,10 @@
+@import '../css-config/mixins.scss';
+.navbar{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    @include md{
+        display: none;
+    }
+}
