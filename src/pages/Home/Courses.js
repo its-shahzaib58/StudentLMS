@@ -32,7 +32,7 @@ export default function Courses() {
             await deleteDoc(doc(firestore, "courses", id));
             message.success("Course deleted successfully")
             const afterDeleteCourse = dbCourses.filter((course) => {
-                return course.id != id
+                return course.id !== id
             })
             console.log(afterDeleteCourse)
             setDbCourses(afterDeleteCourse)
@@ -44,7 +44,7 @@ export default function Courses() {
     const handleSubmit = async () => {
 
         const { courseName, courseId, courseDes } = state
-        const courseData = {
+        var courseData = {
             id: '',
             courseName,
             courseId,
@@ -74,20 +74,14 @@ export default function Courses() {
             const docRefAdd = await addDoc(collection(firestore, "courses"), courseData);
             // Update the timestamp field with the value from the server
             const docRef = doc(firestore, 'courses', docRefAdd.id);
+            console.log(docRef)
             await updateDoc(docRef, {
                 id: docRef.id
             });
             message.success('Course added successfully');
             setSubmitLoading(false)
-            courseData = {
-                id: docRef.id,
-                courseName,
-                courseId,
-                courseStatus,
-                courseDes,
-                createdAt: new Date(),
-            }
-            const arr = [];
+            courseData['id'] = docRefAdd.id
+            const arr = dbCourses;
             arr.push(courseData)
             console.log(arr)
             setDbCourses(arr)
@@ -139,7 +133,7 @@ export default function Courses() {
                                             <td>{course.courseName}</td>
                                             <td>{course.courseId}</td>
                                             <td>{course.courseDes}</td>
-                                            <td style={{ fontSize: '14px', textAlign: 'center' }}>{course.courseStatus == "active" ? <Tooltip title="Active"> <i className="bi bi-check-circle text-success"></i> </Tooltip> : <Tooltip title="Unactive"> <i className="bi bi-x-circle text-danger"></i> </Tooltip>}</td>
+                                            <td style={{ fontSize: '14px', textAlign: 'center' }}>{course.courseStatus === "active" ? <Tooltip title="Active"> <i className="bi bi-check-circle text-success"></i> </Tooltip> : <Tooltip title="Unactive"> <i className="bi bi-x-circle text-danger"></i> </Tooltip>}</td>
                                             <td>
                                                 <Space>
                                                     <Button type="dashed" onClick={() => handleDelete(course.id)} icon={<DeleteOutlined />} danger />
