@@ -25,29 +25,29 @@ export default function Sider() {
                     navigate(key)
                 }}
                 style={{
-                    fontSize: '14px',
+                    fontSize: '15px',
 
                 }}
                 items={[
                     {
                         label: 'Dashboard',
                         key: '/',
-                        icon: <DashboardOutlined />,
+                        icon: <i className="bi bi-speedometer2"></i>,
                     },
                     {
                         label: 'Students',
                         key: '/students',
-                        icon: <UsergroupAddOutlined />,
+                        icon: <i className="bi bi-people"></i>,
                     },
                     {
                         label: 'Course',
                         key: '/course',
-                        icon: <ReadOutlined />,
+                        icon:<i className="bi bi-book"></i>,
                     },
                     {
                         label: 'Attendance',
                         key: '/attendance',
-                        icon: <CalendarOutlined />,
+                        icon: <i className="bi bi-calendar-check"></i>,
                     },
 
                 ]} />

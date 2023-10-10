@@ -22,18 +22,18 @@ export default function index() {
       </Header>
 
       <div className='navbar'>
-        <ul className="nav justify-content-center">
+        <ul className="nav px-3">
           <li className="nav-item">
-            <Link className="nav-link" aria-current="page" to="/"><DashboardOutlined /></Link>
+            <Link className="nav-link" aria-current="page" to="/"><i className="bi bi-speedometer2"></i></Link>
           </li>
           <li className="nav-item">
-            <Link className="nav-link" to="/students"><UsergroupAddOutlined /></Link>
+            <Link className="nav-link" to="/students"><i className="bi bi-people"></i></Link>
           </li>
           <li className="nav-item">
-            <Link className="nav-link" to="/course"><ReadOutlined /></Link>
+            <Link className="nav-link" to="/course"><i className="bi bi-book"></i></Link>
           </li>
           <li className="nav-item">
-            <Link className="nav-link" to="/attendance" ><CalendarOutlined /></Link>
+            <Link className="nav-link" to="/attendance" ><i className="bi bi-calendar-check"></i></Link>
           </li>
         </ul>
       </div>

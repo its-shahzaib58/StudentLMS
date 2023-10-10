@@ -1,28 +1,29 @@
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
-import { Button, Col, Drawer, Form, Input, Row, Select, Space, message } from 'antd'
+import { Button, Col, Drawer, Empty, Form, Input, Row, Select, Space, message } from 'antd'
 import Search from 'antd/es/input/Search'
 import { firestore } from 'config/firebase';
-import CourseContextProvider, { useCourseContext } from 'contexts/CourseContext';
+import { useCourseContext } from 'contexts/CourseContext';
+import { useStudentContext } from 'contexts/StudentContext';
 
 import { addDoc, collection, deleteDoc, doc, getDocs, query, updateDoc, where } from 'firebase/firestore';
-import React, { useEffect, useState } from 'react';
-const { Option } = Select;
-const initState = { studentName: '', studentId: '', studentEmail: '', studentPhoneNo: '', studentHomeAdd: '' }
+import React, {useState } from 'react';
+const initState = { studentName: '', studentId: '',studentCourse:'', studentEmail: '', studentPhoneNo: '', studentHomeAdd: '' }
 
 export default function Students() {
-    const {dbCourses, setDbCourses} = useCourseContext()
+    const { dbCourses, setDbCourses } = useCourseContext()
+    const { dbStudents, setDbStudents } = useStudentContext()
     const [form] = Form.useForm();
     const [isSubmitLoading, setSubmitLoading] = useState(false);
+    const [search, setSearch] = useState("")
     const [state, setState] = useState(initState);
     const [open, setOpen] = useState(false);
     const [openUpdate, setOpenUpdate] = useState(false);
-    const [students, setStudents] = useState([]);
     const [studentCourse, setStudentCourse] = useState('');
     const [editStudent, setEditStudent] = useState({});
 
     const showDrawer = () => {
         setOpen(true);
-        
+
     };
     const onClose = () => {
         setOpen(false);
@@ -33,18 +34,8 @@ export default function Students() {
     const handleChange = e => {
         setState(s => ({ ...s, [e.target.name]: e.target.value }))
     }
-    
-    const getStudents = async () => {
-        const querySnapshot = await getDocs(collection(firestore, "students"));
-        const studentArray = []
-        querySnapshot.forEach((doc) => {
-            studentArray.push(doc.data())
-
-            setStudents(studentArray)
-        });
-    }
     const handleSubmit = async () => {
-        const { studentName, studentId, studentEmail, studentPhoneNo, studentHomeAdd } = state
+        const { studentName, studentId, studentCourse, studentEmail, studentPhoneNo, studentHomeAdd } = state
         const studentData = {
             id: '',
             studentName,
@@ -89,9 +80,13 @@ export default function Students() {
                 id: docRef.id
             });
             message.success('Student added successfully');
-            getStudents()
             setSubmitLoading(false)
-            form.resetFields();
+            studentData['id'] = docRefAdd.id
+            const arr = dbStudents
+            arr.push(studentData)
+            setDbStudents(arr)
+            setState(initState)
+            console.log(dbStudents)
         } catch (error) {
             setSubmitLoading(false)
             console.log(error)
@@ -101,36 +96,35 @@ export default function Students() {
     const handleDelete = async (id) => {
         try {
             await deleteDoc(doc(firestore, "students", id));
-            message.success("Student deleted successfully")
-            getStudents()
+            const afterDeleteStudent = dbStudents.filter((student) => {
+                return student.id !== id
+            })
+            setDbStudents(afterDeleteStudent)
+            message.success("Student Deleted Successfully")
         } catch (e) {
             console.log(e.error)
         }
     }
-    const handleEdit = async(id) => {
+    const handleEdit = async (id) => {
         setOpenUpdate(true)
         const q = query(collection(firestore, "students"), where("id", "==", id));
 
         const querySnapshot = await getDocs(q);
         querySnapshot.forEach((doc) => {
-           setEditStudent(doc.data())
+            setEditStudent(doc.data())
         });
         console.log(editStudent.studentName)
     }
     const handleUpdate = () => {
 
     }
-    useEffect(() => {
-        getStudents()
-    
-    }, [])
     return (
         <div className='student-main'>
             <div className="top-side">
                 <div className="search">
                     <Search
-                        placeholder="Search students"
-
+                        placeholder="Search students via name or id"
+                        onChange={(e) => setSearch(e.target.value.toLowerCase().trim())}
                         style={{
                             width: 300,
                         }}
@@ -159,32 +153,46 @@ export default function Students() {
                         </thead>
                         <tbody>
                             {
-                                students === "" ?
-                                    <th className='text-center'>No Data Found</th>
-                                    :
-                                    students.map((students, i) => {
-                                        return (
-                                            <tr key={i}>
-                                                <th scope="row">{i + 1}</th>
-                                                <td>{students.studentName}</td>
-                                                <td>{students.studentId}</td>
-                                                <td>{students.studentCourse}</td>
-                                                <td>{students.studentEmail}</td>
-                                                <td>{students.studentPhoneNo}</td>
-                                                <td>{students.studentHomeAdd}</td>
-                                                <td>
-                                                    <Space>
-                                                        <Button type="dashed"  icon={<DeleteOutlined />} onClick={() => handleDelete(students.id)} danger />
-                                                        <Button  type="dashed" onClick={() => handleEdit(students.id)}  icon={<EditOutlined />} />
-                                                    </Space>
-                                                </td>
-                                            </tr>)
 
-                                    })
+                                dbStudents.filter((student) => {
+                                    return search === ''
+                                        ? student
+                                        : student.studentName.toLowerCase().includes(search) ||
+                                        student.studentId.toLowerCase().includes(search)
+                                }).map((student, i) => {
+
+                                    return (
+                                        <tr key={i}>
+                                            <th scope="row">{i + 1}</th>
+                                            <td>{student.studentName}</td>
+                                            <td>{student.studentId}</td>
+                                            <td>{student.studentCourse}</td>
+                                            <td>{student.studentEmail}</td>
+                                            <td>{student.studentPhoneNo}</td>
+                                            <td>{student.studentHomeAdd}</td>
+                                            <td>
+                                                <Space>
+                                                    <Button type="dashed" icon={<DeleteOutlined />} onClick={() => handleDelete(student.id)} danger />
+                                                    <Button type="dashed" onClick={() => handleEdit(student.id)} icon={<EditOutlined />} />
+                                                </Space>
+                                            </td>
+                                        </tr>)
+
+                                })
                             }
 
                         </tbody>
                     </table>
+                    {
+                        dbStudents.length === 0 ?
+
+                            <div className='text-center'>
+                                <Empty />
+                            </div>
+                            :
+                            <>
+                            </>
+                    }
                 </div>
             </div>
             <Drawer
@@ -204,107 +212,53 @@ export default function Students() {
                     </Space>
                 }
             >
-                <Form layout="vertical"
-                    form={form}
+                <form layout="vertical"
+                    
                 >
                     <Row gutter={16}>
                         <Col span={12}>
-                            <Form.Item
-                                name="Student Name"
-                                label="Student Name"
-                                rules={[
-                                    {
-                                        required: true,
+                            <label><b className='text-danger'>*</b>Student Name </label>
+                            <input type='text' className='form-control mb-3' name="studentName" value={state.studentName} onChange={handleChange} placeholder="Enter student name" />
 
-                                    },
-                                ]}
-                            >
-                                <Input name="studentName" value={state.studentName} onChange={handleChange} placeholder="Please enter student name" />
-                            </Form.Item>
                         </Col>
                         <Col span={12}>
-                            <Form.Item
-                                name="Student Id"
-                                label="Student ID"
-                                rules={[
-                                    {
-                                        required: true,
+                            <label><b className='text-danger'>*</b>Student ID</label>
+                            <input type='tel' className='form-control mb-3' name='studentId' value={state.studentId} onChange={handleChange} placeholder="Example 3310000000000" />
 
-                                    },
-                                ]}
-                            >
-                                <Input name='studentId' value={state.studentId} onChange={handleChange} placeholder="Please enter student id" />
-                            </Form.Item>
                         </Col>
                         <Col span={24}>
-                            <Form.Item
-                                name="Student Course"
-                                label="Student Course"
-                                rules={[
-                                    {
-                                        required: true,
+                            <label><b className='text-danger'>*</b>Student Course </label>
+                            <select className='form-control mb-3' name="studentCourse" value={state.studentCourse} onChange={handleChange} placeholder="Ehoose the course">
+                                {
+                                    dbCourses.filter((course) => {
+                                        return course.courseStatus === 'active'
+                                    }).map((course, i) => {
+                                        return <option key={i} value={course.courseName}>{course.courseName}</option>
 
-                                    },
-                                ]}
-                            >
-                                <Select name="studentCourse" onChange={(value) => { setStudentCourse(value) }} placeholder="Please choose the student course">
-                                    {
-                                        dbCourses.map((course, i) => {
-                                            return <Option key={i} value={course.courseId}>{course.courseName}</Option>
+                                    })
 
-                                        })
-
-                                    }
-                                </Select>
-                            </Form.Item>
+                                }
+                            </select>
                         </Col>
                         <Col span={12}>
-                            <Form.Item
-                                name="Student Email Address"
-                                label="Student Email Address"
-                                rules={[
-                                    {
-                                        required: true,
+                            <label><b className='text-danger'>*</b>Student Email Address</label>
+                            <input type='email' className='form-control mb-3' name='studentEmail' value={state.studentEmail} onChange={handleChange} placeholder="Enter student email address" />
 
-                                    },
-                                ]}
-                            >
-                                <Input name='studentEmail' value={state.studentId} onChange={handleChange} placeholder="Please enter student email address" />
-                            </Form.Item>
                         </Col>
                         <Col span={12}>
-                            <Form.Item
-                                name="Student Phone Number"
-                                label="Student Phone Number"
-                                rules={[
-                                    {
-                                        required: true,
+                            <label><b className='text-danger'>*</b>Student Phone Number </label>
+                            <input type='tel' className='form-control mb-3' name='studentPhoneNo' value={state.studentPhoneNo} onChange={handleChange} placeholder="Example 9230000000" pattern="[0-9]{12}" required />
 
-                                    },
-                                ]}
-                            >
-                                <Input name='studentPhoneNo' value={state.studentId} onChange={handleChange} placeholder="Please enter student phone number" />
-                            </Form.Item>
                         </Col>
                     </Row>
                     <Row gutter={16}>
                         <Col span={24}>
-                            <Form.Item
-                                name="Student Home Address"
-                                label="Student Home Address"
-                                rules={[
-                                    {
-                                        required: true,
-
-                                    },
-                                ]}
-                            >
-                                <Input.TextArea rows={4} value={state.courseDes} name='studentHomeAdd' onChange={handleChange} placeholder="Please enter student home address" />
-                            </Form.Item>
+                            <label><b className='text-danger'>*</b>Student Postal Address </label>
+                            <textarea className='form-control mb-3' rows={4} value={state.studentHomeAdd} name='studentHomeAdd' onChange={handleChange} placeholder="Enter student postal address" />
                         </Col>
                     </Row>
 
-                </Form>
+                </form>
             </Drawer>
             <Drawer
                 title="Update student"
@@ -329,18 +283,18 @@ export default function Students() {
                     <Row gutter={16}>
                         <Col span={12}>
                             <label>Student Name*</label>
-                           <input type="text" className='form-control mb-3' value={editStudent.studentName} />
+                            <input type="text" className='form-control mb-3' value={editStudent.studentName} />
                         </Col>
                         <Col span={12}>
-                        <label>Student Id*</label>
-                           <input type="text" className='form-control mb-3' value={editStudent.studentId} />
+                            <label>Student Id*</label>
+                            <input type="text" className='form-control mb-3' value={editStudent.studentId} />
                         </Col>
                         <Col span={24}>
                             <label>Student Course*</label>
                             <select name="student" className='form-control mb-3'>
                                 <option selected disabled>Select student course</option>
                                 {
-                                    dbCourses.map((course,i)=>{
+                                    dbCourses.map((course, i) => {
                                         return <option key={i} value={course.courseId} >{course.courseName}</option>
                                     })
                                 }
@@ -348,17 +302,17 @@ export default function Students() {
                         </Col>
                         <Col span={12}>
                             <label>Student Email*</label>
-                           <input type="email" className='form-control mb-3' value={editStudent.studentEmail} />
+                            <input type="email" className='form-control mb-3' value={editStudent.studentEmail} />
                         </Col>
                         <Col span={12}>
-                        <label>Student Phone No*</label>
-                           <input type="text" className='form-control mb-3' value={editStudent.studentPhoneNo} />
+                            <label>Student Phone No*</label>
+                            <input type="text" className='form-control mb-3' value={editStudent.studentPhoneNo} />
                         </Col>
                     </Row>
                     <Row gutter={16}>
                         <Col span={24}>
                             <label>Student Home Address*</label>
-                           <textarea type="text" className='form-control mb-3' value={editStudent.studentHomeAdd} />
+                            <textarea type="text" className='form-control mb-3' value={editStudent.studentHomeAdd} />
                         </Col>
                     </Row>
 

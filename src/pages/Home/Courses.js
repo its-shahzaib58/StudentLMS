@@ -1,10 +1,10 @@
-import { DeleteOutlined, EditOutlined, LoadingOutlined, WarningFilled, WarningOutlined, } from '@ant-design/icons'
+import { DeleteOutlined, EditOutlined, LoadingOutlined} from '@ant-design/icons'
 import { Button, Col, Drawer, Empty, Form, Modal, Popconfirm, Row, Space, Tooltip, message } from 'antd'
 import Search from 'antd/es/input/Search'
 import { firestore } from 'config/firebase';
 import { useCourseContext } from 'contexts/CourseContext';
 import { addDoc, collection, deleteDoc, doc, updateDoc } from 'firebase/firestore';
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 const initState = { courseName: '', courseId: '', courseDes: '', courseStatus: '' }
 
 export default function Courses() {
@@ -38,8 +38,8 @@ export default function Courses() {
         const getEditCourse = dbCourses.filter((course) => {
             return course.id === id
         })
-        getEditCourse.map(course => {
-            setEditState(course)
+        getEditCourse.map((course)=> {
+           return setEditState(course)
         })
     }
     // Update Course Function
@@ -84,12 +84,12 @@ export default function Courses() {
 
         try {
             await deleteDoc(doc(firestore, "courses", id));
-            message.success("Course deleted successfully")
             const afterDeleteCourse = dbCourses.filter((course) => {
                 return course.id !== id
             })
             console.log(afterDeleteCourse)
             setDbCourses(afterDeleteCourse)
+            message.success("Course deleted successfully")
 
         } catch (e) {
             console.log(e.error)
@@ -138,7 +138,6 @@ export default function Courses() {
             const arr = dbCourses;
             arr.push(courseData)
             setDbCourses(arr)
-            form.resetFields();
             setState(initState)
         } catch (error) {
             setSubmitLoading(false)
@@ -152,7 +151,7 @@ export default function Courses() {
             <div className="top-side">
                 <div className="search">
                     <Search
-                        placeholder="Search course via course name"
+                        placeholder="Search course via name or id"
                         onChange={(e) => setSearch(e.target.value.toLowerCase().trim())}
                         style={{
                             width: 300,

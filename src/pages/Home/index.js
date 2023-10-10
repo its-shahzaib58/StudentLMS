@@ -43,9 +43,7 @@ export default function Home() {
           </Row>
           <Row className='mt-2 border-shadows scroll-hide'
           style={{
-            height:'80vh',
-            borderRadius:'20px',
-            padding:10,
+            height:'85vh',
           }}
           >
           <Content>
