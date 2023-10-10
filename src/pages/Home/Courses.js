@@ -1,4 +1,4 @@
-import { DeleteOutlined, EditOutlined, WarningFilled, WarningOutlined, } from '@ant-design/icons'
+import { DeleteOutlined, EditOutlined, LoadingOutlined, WarningFilled, WarningOutlined, } from '@ant-design/icons'
 import { Button, Col, Drawer, Empty, Form, Modal, Popconfirm, Row, Space, Tooltip, message } from 'antd'
 import Search from 'antd/es/input/Search'
 import { firestore } from 'config/firebase';
@@ -12,9 +12,14 @@ export default function Courses() {
     const [form] = Form.useForm();
     const [isSubmitLoading, setSubmitLoading] = useState(false);
     const [state, setState] = useState(initState);
+    const [editState, setEditState] = useState(initState);
     const [search, setSearch] = useState('');
     const [open, setOpen] = useState(false);
+    const [isOpenEditModal, setOpenEditModal] = useState(false)
 
+    const handleEditModalClose = () => {
+        setOpenEditModal(false)
+    }
     const showDrawer = () => {
         setOpen(true);
     };
@@ -24,7 +29,56 @@ export default function Courses() {
     const handleChange = e => {
         setState(s => ({ ...s, [e.target.name]: e.target.value }))
     }
-
+    const handleEditChange = e => {
+        setEditState(s => ({ ...s, [e.target.name]: e.target.value }))
+    }
+    // Edit Course Function
+    const handleEditCourse = id => {
+        setOpenEditModal(true)
+        const getEditCourse = dbCourses.filter((course) => {
+            return course.id === id
+        })
+        getEditCourse.map(course => {
+            setEditState(course)
+        })
+    }
+    // Update Course Function
+    const handleUpdateCourse = async () => {
+        const { id, courseName, courseId, courseStatus, courseDes, createdAt } = editState
+        if (courseName === "") {
+            message.warning("Please enter course name")
+            return;
+        }
+        if (courseStatus === "") {
+            message.warning("Please select course status")
+            return;
+        }
+        if (courseDes === "") {
+            message.warning("Please enter course description")
+            return;
+        }
+        setSubmitLoading(true)
+        const updateCourse = {
+            id,
+            courseName,
+            courseId,
+            courseStatus,
+            courseDes,
+            createdAt,
+            modifiedAt: new Date(),
+        }
+        const docRef = doc(firestore, 'courses', editState.id);
+        await updateDoc(docRef, updateCourse);
+        
+        const editCourse = dbCourses.filter((course) => {
+            return course.id !== editState.id
+        })
+        editCourse.push(updateCourse)
+        setDbCourses(editCourse)
+        setSubmitLoading(false)
+        setOpenEditModal(false)
+        message.success("Course updated successfully")
+    }
     // Delete Course Function
     const handleDelete = async (id) => {
 
@@ -128,10 +182,10 @@ export default function Courses() {
                         <tbody>
                             {
                                 dbCourses.filter((course) => {
-                                    return search === '' 
-                                    ? course 
-                                    : course.courseName.toLowerCase().includes(search) ||
-                                     course.courseId.toLowerCase().includes(search) 
+                                    return search === ''
+                                        ? course
+                                        : course.courseName.toLowerCase().includes(search) ||
+                                        course.courseId.toLowerCase().includes(search)
                                 }).map((course, i) => {
                                     return (
                                         <tr key={i}>
@@ -152,7 +206,7 @@ export default function Courses() {
                                                     >
                                                         <Button type="dashed" icon={<DeleteOutlined />} danger />
                                                     </Popconfirm>
-                                                    <Button type="dashed" icon={<EditOutlined />} />
+                                                    <Button type="dashed" onClick={() => { handleEditCourse(course.id) }} icon={<EditOutlined />} />
                                                 </Space>
 
                                             </td>
@@ -226,7 +280,40 @@ export default function Courses() {
 
                 </Form>
             </Drawer>
+            {/* Edit Course Modal */}
+            <Modal title="Edit Course" open={isOpenEditModal} onOk={handleUpdateCourse} onCancel={handleEditModalClose} okText={isSubmitLoading === true ? <LoadingOutlined /> : "Update"}>
+                <Form layout="vertical"
+                    form={form}
+                >
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <label><b className='text-danger'>*</b>Course Name </label>
+                            <input className='form-control mb-4' name="courseName" value={editState.courseName} onChange={handleEditChange} placeholder="Please enter course name" />
 
+                        </Col>
+                        <Col span={12}>
+                            <label><b className='text-danger'>*</b>Course Code </label>
+                            <input className='form-control mb-4' name='courseId' value={editState.courseId} onChange={handleEditChange} disabled />
+                        </Col>
+                        <Col span={24}>
+                            <label><b className='text-danger'>*</b>Course Status </label>
+                            <select className='form-control mb-4' value={editState.courseStatus} name="courseStatus" onChange={handleEditChange} placeholder="Please choose the course status">
+                                <option value="active">Active</option>
+                                <option value="unactive">Unactive</option>
+                            </select>
+
+                        </Col>
+                    </Row>
+                    <Row gutter={16}>
+                        <Col span={24}>
+                            <label><b className='text-danger'>*</b>Course Description </label>
+                            <textarea className='form-control mb-4' rows={4} value={editState.courseDes} name='courseDes' onChange={handleEditChange} placeholder="Please enter course description" />
+
+                        </Col>
+                    </Row>
+
+                </Form>
+            </Modal>
         </div>
     )
 }
