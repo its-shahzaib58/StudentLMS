@@ -1,16 +1,16 @@
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
-import { Button, Col, Drawer, Empty, Form, Input, Row, Select, Space, message } from 'antd'
+import { Button, Col, Drawer, Empty, Form, Row, Space, message } from 'antd'
 import Search from 'antd/es/input/Search'
 import { firestore } from 'config/firebase';
 import { useCourseContext } from 'contexts/CourseContext';
 import { useStudentContext } from 'contexts/StudentContext';
 
-import { addDoc, collection, deleteDoc, doc, getDocs, query, updateDoc, where } from 'firebase/firestore';
-import React, {useState } from 'react';
-const initState = { studentName: '', studentId: '',studentCourse:'', studentEmail: '', studentPhoneNo: '', studentHomeAdd: '' }
+import { addDoc, collection, deleteDoc, doc, updateDoc, } from 'firebase/firestore';
+import React, { useState } from 'react';
+const initState = { studentName: '', studentId: '', studentCourse: '', studentEmail: '', studentPhoneNo: '', studentHomeAdd: '' }
 
 export default function Students() {
-    const { dbCourses, setDbCourses } = useCourseContext()
+    const { dbCourses } = useCourseContext()
     const { dbStudents, setDbStudents } = useStudentContext()
     const [form] = Form.useForm();
     const [isSubmitLoading, setSubmitLoading] = useState(false);
@@ -18,8 +18,8 @@ export default function Students() {
     const [state, setState] = useState(initState);
     const [open, setOpen] = useState(false);
     const [openUpdate, setOpenUpdate] = useState(false);
-    const [studentCourse, setStudentCourse] = useState('');
     const [editStudent, setEditStudent] = useState({});
+    const [lastStudentCourse, setLastStudentCourse] = useState('');
 
     const showDrawer = () => {
         setOpen(true);
@@ -45,8 +45,9 @@ export default function Students() {
             studentPhoneNo,
             studentHomeAdd,
             createdAt: new Date(),
+            lastStudentCourse:'',
+            modifiedAt:'',
         }
-        console.log(studentData)
         if (studentData.studentName === "") {
             message.warning("Please enter student name")
             return;
@@ -105,18 +106,62 @@ export default function Students() {
             console.log(e.error)
         }
     }
+    // Edit Student Function
+    const handleEditChange = e => {
+        setEditStudent(s => ({ ...s, [e.target.name]: e.target.value }))
+    }
     const handleEdit = async (id) => {
         setOpenUpdate(true)
-        const q = query(collection(firestore, "students"), where("id", "==", id));
-
-        const querySnapshot = await getDocs(q);
-        querySnapshot.forEach((doc) => {
-            setEditStudent(doc.data())
-        });
-        console.log(editStudent.studentName)
+        const getStudentData = dbStudents.find((student) => {
+            return student.id === id;
+        })
+        setLastStudentCourse(getStudentData.studentCourse)
+        setEditStudent(getStudentData)
     }
-    const handleUpdate = () => {
+    // Update Student Function
+    const handleUpdate = async() => {
+        const { id,studentName,studentId, studentCourse, studentEmail, studentPhoneNo, studentHomeAdd,createdAt } = editStudent
+        const studentUpdateData = {
+            id,
+            studentName,
+            studentId,
+            studentCourse,
+            studentEmail,
+            studentPhoneNo,
+            studentHomeAdd,
+            createdAt,
+            studentLastCourse:lastStudentCourse,
+            modifiedAt:new Date(),
+        }
+        if (studentUpdateData.studentCourse === "") {
+            message.warning("Please select student course ")
+            return;
+        }
+        if (studentUpdateData.studentEmail === "") {
+            message.warning("Please enter student email")
+            return;
+        }
+        if (studentUpdateData.studentEmail === "") {
+            message.warning("Please enter student phone no")
+            return;
+        }
+        if (studentUpdateData.studentHomeAdd === "") {
+            message.warning("Please enter student home address")
+            return;
+        }
+        setSubmitLoading(true)
+        
+        const docRef = doc(firestore, 'students', studentUpdateData.id);
+        await updateDoc(docRef, studentUpdateData);
 
+        const updateStudentData = dbStudents.filter((student)=>{
+            return student.id !== studentUpdateData.id
+        })
+        updateStudentData.push(studentUpdateData)
+        setDbStudents(updateStudentData)
+        setSubmitLoading(false)
+        setOpenUpdate(false)
+        message.success("Student Update Successfully");
     }
     return (
         <div className='student-main'>
@@ -213,7 +258,7 @@ export default function Students() {
                 }
             >
                 <form layout="vertical"
-                    
+
                 >
                     <Row gutter={16}>
                         <Col span={12}>
@@ -260,6 +305,7 @@ export default function Students() {
 
                 </form>
             </Drawer>
+            {/* Update Student Drawer */}
             <Drawer
                 title="Update student"
                 width={620}
@@ -282,40 +328,39 @@ export default function Students() {
                 >
                     <Row gutter={16}>
                         <Col span={12}>
-                            <label>Student Name*</label>
-                            <input type="text" className='form-control mb-3' value={editStudent.studentName} />
+                            <label>Student Name</label>
+                            <input type="text" className='form-control mb-3' value={editStudent.studentName} disabled />
                         </Col>
                         <Col span={12}>
-                            <label>Student Id*</label>
-                            <input type="text" className='form-control mb-3' value={editStudent.studentId} />
+                            <label>Student Id</label>
+                            <input type="text" className='form-control mb-3' value={editStudent.studentId} disabled />
                         </Col>
                         <Col span={24}>
-                            <label>Student Course*</label>
-                            <select name="student" className='form-control mb-3'>
-                                <option selected disabled>Select student course</option>
+                            <label><b className='text-danger'>*</b> Student Course</label>
+                            <select name="studentCourse" className='form-control mb-3'  onChange={handleEditChange}>
+                                <option disabled>Select student course</option>
                                 {
                                     dbCourses.map((course, i) => {
-                                        return <option key={i} value={course.courseId} >{course.courseName}</option>
+                                        return <option key={i} value={course.courseName} >{course.courseName}</option>
                                     })
                                 }
                             </select>
                         </Col>
                         <Col span={12}>
-                            <label>Student Email*</label>
-                            <input type="email" className='form-control mb-3' value={editStudent.studentEmail} />
+                            <label><b className='text-danger'>*</b> Student Email</label>
+                            <input type="email" className='form-control mb-3' name='studentEmail' onChange={handleEditChange} value={editStudent.studentEmail} />
                         </Col>
                         <Col span={12}>
-                            <label>Student Phone No*</label>
-                            <input type="text" className='form-control mb-3' value={editStudent.studentPhoneNo} />
+                            <label><b className='text-danger'>*</b> Student Phone No</label>
+                            <input type="text" className='form-control mb-3' name='studentPhoneNo'  onChange={handleEditChange} value={editStudent.studentPhoneNo} />
                         </Col>
                     </Row>
                     <Row gutter={16}>
                         <Col span={24}>
-                            <label>Student Home Address*</label>
-                            <textarea type="text" className='form-control mb-3' value={editStudent.studentHomeAdd} />
+                            <label><b className='text-danger'>*</b> Student Postal Address</label>
+                            <textarea type="text" className='form-control mb-3'  onChange={handleEditChange} value={editStudent.studentHomeAdd} />
                         </Col>
                     </Row>
-
                 </Form>
             </Drawer>
         </div>

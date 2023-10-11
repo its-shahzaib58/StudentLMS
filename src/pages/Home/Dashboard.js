@@ -1,11 +1,8 @@
 
-import React, { useEffect, useState } from 'react'
+import React, {useState } from 'react'
 import { Content } from 'antd/es/layout/layout';
 import { Card, Col, Row, Statistic } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
-import { collection, getDocs, query } from 'firebase/firestore';
-
-import { firestore } from 'config/firebase';
 import { useCourseContext } from 'contexts/CourseContext';
 import { CChart } from '@coreui/react-chartjs';
 import { useStudentContext } from 'contexts/StudentContext';
@@ -17,17 +14,9 @@ export default function Dashboard() {
   const [totalStudents, setTotalStudents] = useState("")
   const [totalCoursesName, setTotalCoursesName] = useState([])
   const [joinStudentCourses, setJoinStudentCourses] = useState([])
-  
-  const getCourse = () => {
-    
-  }
-  
-  const joinStudentsStats = ()=>{
-    
-  }
   setTimeout(()=>{
     const activeCourses = dbCourses.filter(course => {
-      return course.courseStatus == 'active'
+      return course.courseStatus === 'active'
     })
     
     setTotalActiveCourse(activeCourses.length)
@@ -38,7 +27,7 @@ export default function Dashboard() {
     setTotalCoursesName(allCourses)
     setTotalStudents(dbStudents.length)
     const arr = [];
-    totalCoursesName.map((c)=>{
+    totalCoursesName.map((c,i)=>{
       const stu = dbStudents.filter((student)=>{
         return student.studentCourse === c
       })

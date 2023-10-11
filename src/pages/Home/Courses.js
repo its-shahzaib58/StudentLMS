@@ -64,7 +64,7 @@ export default function Courses() {
             courseId,
             courseStatus,
             courseDes,
-            createdAt,
+            createdAt,  
             modifiedAt: new Date(),
         }
         const docRef = doc(firestore, 'courses', editState.id);
@@ -95,6 +95,7 @@ export default function Courses() {
             console.log(e.error)
         }
     }
+    // Add Course Function
     const handleSubmit = async () => {
 
         const { courseName, courseId, courseDes, courseStatus } = state
