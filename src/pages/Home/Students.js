@@ -87,7 +87,6 @@ export default function Students() {
             arr.push(studentData)
             setDbStudents(arr)
             setState(initState)
-            console.log(dbStudents)
         } catch (error) {
             setSubmitLoading(false)
             console.log(error)
@@ -120,7 +119,7 @@ export default function Students() {
     }
     // Update Student Function
     const handleUpdate = async () => {
-        const { id, studentName, studentId, studentCourse, studentEmail, studentPhoneNo, studentHomeAdd, createdAt,todayStatus } = editStudent
+        const { id, studentName, studentId, studentCourse, studentEmail, studentPhoneNo, studentHomeAdd, createdAt } = editStudent
         const studentUpdateData = {
             id,
             studentName,

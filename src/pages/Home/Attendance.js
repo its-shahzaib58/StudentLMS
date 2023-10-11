@@ -1,7 +1,7 @@
 import { useCourseContext } from 'contexts/CourseContext'
 import React, { useState } from 'react'
 import Search from 'antd/es/input/Search'
-import { Button, Empty, Space, message } from 'antd'
+import { Empty, message } from 'antd'
 import { useStudentContext } from 'contexts/StudentContext'
 import dayjs from 'dayjs'
 import { addDoc, collection, doc, updateDoc } from 'firebase/firestore'
@@ -10,30 +10,28 @@ import { useAttendanceContext } from 'contexts/AttendanceContext'
 export default function Attendance() {
   const { dbCourses } = useCourseContext()
   const { dbStudents } = useStudentContext()
-  const {dbAttendance, setDbAttendance} = useAttendanceContext()
+  const { dbAttendance, setDbAttendance } = useAttendanceContext()
   const [searchCourse, setSearchCourse] = useState('')
   const [search, setSearch] = useState('')
 
   // Attendance Function
   const handleAttendance = async (e, id) => {
-    const todayAttendance = dbAttendance.filter((att)=>{
+    const todayAttendance = dbAttendance.filter((att) => {
       return att.createdAt === dayjs(new Date()).format('DD-MM-YYYY') && att.studentId === id
     })
     const status = e.target.value
     const attendanceStudent = {
-      id:'',
+      id: '',
       studentId: id,
       status,
       createdAt: dayjs(new Date()).format('DD-MM-YYYY')
     }
-    if(status==='')
-    {
+    if (status === '') {
       message.error("Please select today status")
       return;
     }
-    
-    if(todayAttendance.length === 0 )
-    {
+
+    if (todayAttendance.length === 0) {
       const docRefAdd = await addDoc(collection(firestore, "attendance"), attendanceStudent);
       // Update the id field with the value
       const attIdUpdate = doc(firestore, 'attendance', docRefAdd.id);
@@ -41,23 +39,29 @@ export default function Attendance() {
         id: attIdUpdate.id,
       });
       attendanceStudent['id'] = docRefAdd.id
-      const  arr = dbAttendance
+      const arr = dbAttendance
       arr.push(attendanceStudent)
       setDbAttendance(arr)
       message.success("Attendace Added Successfully")
-      return;
     }
-    else
-    {
-    const attUpdate = doc(firestore, 'attendance', todayAttendance[0].id);
-    await updateDoc(attUpdate, {
-      status:attendanceStudent.status,
-      createdAt:attendanceStudent.createdAt
-    });
-    message.success("Attendace Update Successfully")
-    return;
+    else {
+      const attUpdate = doc(firestore, 'attendance', todayAttendance[0].id);
+      const attChangeStatus = {
+        id: todayAttendance[0].id,
+        studentId: id,
+        status: attendanceStudent.status,
+        createdAt: attendanceStudent.createdAt
+      }
+      await updateDoc(attUpdate, attChangeStatus);
+      const updatedAttendance = dbAttendance.filter((att) => {
+        return att.id !== attChangeStatus.id
+      })
+      updatedAttendance.push(attChangeStatus)
+      setDbAttendance(updatedAttendance)
+      message.success("Attendace Update Successfully")
     }
   }
+  
   return (
     <div className='attendance-main'>
       <div className="top-bar">
@@ -122,25 +126,24 @@ export default function Attendance() {
                       <td>{student.studentCourse}</td>
                       <td>
                         {
-                        dbAttendance.filter((att)=>{
-                          return att.studentId === student.id && att.createdAt === dayjs(new Date()).format('DD-MM-YYYY')
-                        }).map((att)=>{
-                         return <Space>
-                            {att.status === 'present'? <span className='bg-success p-2 rounded text-light fw-bold'>P</span> : att.status==="absent"? <span className='bg-danger p-2 rounded text-light fw-bold'>A</span>: att.status === "leave"?<span className='bg-warning p-2 rounded text-light fw-bold'>L</span> : <span>No Mark Attendance</span>  }
-                        </Space>
-                        })
-                        
+                          dbAttendance.filter((att) => {
+                            return att.studentId === student.id && att.createdAt === dayjs(new Date()).format('DD-MM-YYYY')
+                          }).map((att, i) => {
+                            return <div className='mt-2' key={i}>
+                              {att.status === 'present' ? <span className='bg-success p-2 rounded text-light fw-bold'>Present</span> : att.status === "absent" ? <span className='bg-danger p-2 rounded text-light fw-bold'>Absent</span> : att.status === "leave" ? <span className='bg-warning p-2 rounded text-light fw-bold'>Leave</span> : <span>No Mark Attendance</span>}
+                            </div>
+                          })
                         }
                       </td>
                       <td>
-                        <select className='form-select' onChange={(e) => handleAttendance(e, student.id)}>
+                        <select className='form-select' onChange={(e) => handleAttendance(e, student.id)} >
                           <option disabled selected>Select</option>
                           <option value='present'>Present</option>
                           <option value='absent'>Absent</option>
                           <option value='leave'>Leave</option>
                         </select>
                       </td>
-                      
+
                     </tr>)
 
                 })
