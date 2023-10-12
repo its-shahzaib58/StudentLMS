@@ -1,47 +1,82 @@
 
-import React, {useState } from 'react'
+import React, { useState } from 'react'
 import { Content } from 'antd/es/layout/layout';
-import { Card, Col, Row, Statistic } from 'antd';
+import { Card, Col, Divider, Row, Statistic } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
 import { useCourseContext } from 'contexts/CourseContext';
 import { CChart } from '@coreui/react-chartjs';
 import { useStudentContext } from 'contexts/StudentContext';
+import { useAttendanceContext } from 'contexts/AttendanceContext';
+import dayjs from 'dayjs';
 
 export default function Dashboard() {
   const { dbCourses } = useCourseContext()
-  const {dbStudents} = useStudentContext()
+  const { dbStudents } = useStudentContext()
+  const {dbAttendance} = useAttendanceContext()
   const [totalActiveCourse, setTotalActiveCourse] = useState("")
   const [totalStudents, setTotalStudents] = useState("")
+  const [todayPrensent, setTodayPresent] = useState(0)
+  const [todayAbsent, setTodayAbsent] = useState(0)
+  const [todayLeave, setTodayLeave] = useState(0)
+  const [todayNoMark, setTodayNoMark] = useState(0)
   const [totalCoursesName, setTotalCoursesName] = useState([])
   const [joinStudentCourses, setJoinStudentCourses] = useState([])
-  setTimeout(()=>{
+  setTimeout(() => {
+    // Backend of Join Student Chart
     const activeCourses = dbCourses.filter(course => {
       return course.courseStatus === 'active'
     })
-    
+
     setTotalActiveCourse(activeCourses.length)
 
-    const allCourses = dbCourses.map((course)=>{
+    const allCourses = dbCourses.map((course) => {
       return course.courseName
     })
     setTotalCoursesName(allCourses)
     setTotalStudents(dbStudents.length)
     const arr = [];
-    totalCoursesName.map((c,i)=>{
-      const stu = dbStudents.filter((student)=>{
+    totalCoursesName.map((c, i) => {
+      const stu = dbStudents.filter((student) => {
         return student.studentCourse === c
       })
       arr.push(stu.length)
     })
     setJoinStudentCourses(arr)
-  },100)
+    // Backend of Attendance Chart
+    // Total Present Students
+    const todayPrensentStatus = dbAttendance.filter((status)=>{
+      return status.createdAt === dayjs(new Date()).format('DD-MM-YYYY') && status.status === 'present'
+    }).map((status)=>{
+      return status.status
+    }).length;
+    setTodayPresent(todayPrensentStatus)
+    // Total Absent Students
+    const todayAbsentStatus = dbAttendance.filter((status)=>{
+      return status.createdAt === dayjs(new Date()).format('DD-MM-YYYY') && status.status === 'absent'
+    }).map((status)=>{
+      return status.status
+    }).length ;
+    setTodayAbsent(todayAbsentStatus)
+    // Total Leave Students
+    const todayLeaveStatus = dbAttendance.filter((status)=>{
+      return status.createdAt === dayjs(new Date()).format('DD-MM-YYYY') && status.status === 'leave'
+    }).map((status)=>{
+      return status.status
+    }).length;
+    setTodayLeave(todayLeaveStatus)
+    // Total No Mark Attendance 
+    const totalStudents = dbStudents.length - todayPrensentStatus-todayAbsentStatus-todayLeaveStatus;
+
+    setTodayNoMark(totalStudents/dbStudents.length*100)
+    console.log()
+  }, 100)
   return (
     <>
 
       <Content className='p-3'>
         <Row gutter={16} className='mb-3'>
           <Col span={12}>
-            <Card bordered={true} style={{fontSize:'24px'}}>
+            <Card bordered={true} style={{ fontSize: '24px' }}>
               <Statistic
                 title="Total Students"
                 value={totalStudents}
@@ -65,8 +100,9 @@ export default function Dashboard() {
           </Col>
         </Row>
         <Row>
-           <Col lg={{span:20,offset:2}} sm={{span:20,offset:2}}>
-           <CChart
+          <Col lg={{ span: 12, offset: 0 }} sm={{ span: 20, offset: 2 }}>
+          <Divider>Join Students Chart</Divider>
+            <CChart
               type="bar"
               height={150}
               data={{
@@ -84,7 +120,7 @@ export default function Dashboard() {
                 plugins: {
                   legend: {
                     labels: {
-                      color:'black'
+                      color: 'black'
                     }
                   }
                 },
@@ -102,13 +138,37 @@ export default function Dashboard() {
 
                     },
                     ticks: {
-                      color:'black'
+                      color: 'black'
                     },
                   },
                 },
               }}
             />
-           </Col>
+          </Col>
+          <Col lg={{ span: 10, offset: 1 }} sm={{ span: 20, offset: 2 }}>
+                <Divider>Students Attendance Chart</Divider>
+            <CChart
+              type="doughnut"
+              data={{
+                labels: ['Present', 'Absent', 'Leave','No Mark Attendance'],
+                datasets: [
+                  {
+                    backgroundColor: ['#62BC47', '#DC3545','#FFC107','#6C757D'],
+                    data: [todayPrensent/dbStudents.length*100, todayAbsent/dbStudents.length*100, todayLeave/dbStudents.length*100, todayNoMark],
+                  },
+                ],
+              }}
+              options={{
+                plugins: {
+                  legend: {
+                    labels: {
+                      color: 'black',
+                    }
+                  }
+                },
+              }}
+            />
+          </Col>
         </Row>
       </Content>
     </>
