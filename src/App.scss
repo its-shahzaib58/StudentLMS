@@ -1,4 +1,5 @@
 
+@import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css");
 @import 'scss/bootstrap';
 @import 'scss/auth';
 @import 'scss/sidebar';
@@ -6,6 +7,7 @@
 @import 'scss/courses';
 @import 'scss/content';
 @import 'scss/header';
+@import 'scss/attendance';
 
 .loader-container{
     display: flex;

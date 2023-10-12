@@ -45,8 +45,8 @@ export default function Students() {
             studentPhoneNo,
             studentHomeAdd,
             createdAt: new Date(),
-            lastStudentCourse:'',
-            modifiedAt:'',
+            lastStudentCourse: '',
+            modifiedAt: '',
         }
         if (studentData.studentName === "") {
             message.warning("Please enter student name")
@@ -119,8 +119,8 @@ export default function Students() {
         setEditStudent(getStudentData)
     }
     // Update Student Function
-    const handleUpdate = async() => {
-        const { id,studentName,studentId, studentCourse, studentEmail, studentPhoneNo, studentHomeAdd,createdAt } = editStudent
+    const handleUpdate = async () => {
+        const { id, studentName, studentId, studentCourse, studentEmail, studentPhoneNo, studentHomeAdd, createdAt,todayStatus } = editStudent
         const studentUpdateData = {
             id,
             studentName,
@@ -130,8 +130,8 @@ export default function Students() {
             studentPhoneNo,
             studentHomeAdd,
             createdAt,
-            studentLastCourse:lastStudentCourse,
-            modifiedAt:new Date(),
+            studentLastCourse: lastStudentCourse,
+            modifiedAt: new Date(),
         }
         if (studentUpdateData.studentCourse === "") {
             message.warning("Please select student course ")
@@ -150,11 +150,11 @@ export default function Students() {
             return;
         }
         setSubmitLoading(true)
-        
+
         const docRef = doc(firestore, 'students', studentUpdateData.id);
         await updateDoc(docRef, studentUpdateData);
 
-        const updateStudentData = dbStudents.filter((student)=>{
+        const updateStudentData = dbStudents.filter((student) => {
             return student.id !== studentUpdateData.id
         })
         updateStudentData.push(studentUpdateData)
@@ -175,7 +175,7 @@ export default function Students() {
                         }}
                     />
                 </div>
-                <div className="add">
+                <div className="add py-1">
                     <Button type="primary" size='middle' onClick={showDrawer} icon={<i className="bi bi-person-plus"></i>}>
                         Add New Student
                     </Button>
@@ -190,9 +190,9 @@ export default function Students() {
                                 <th scope="col">Student Name</th>
                                 <th scope="col">Student ID</th>
                                 <th scope="col">Student Course</th>
-                                <th scope="col">Student Email</th>
-                                <th scope="col">Student Phone No#</th>
-                                <th scope="col">Student Address</th>
+                                <th scope="col" className='no-show-sm'>Student Email</th>
+                                <th scope="col" className='no-show-sm'>Student Phone No#</th>
+                                <th scope="col" className='no-show-sm'>Student Address</th>
                                 <th scope="col">Actions</th>
                             </tr>
                         </thead>
@@ -212,9 +212,9 @@ export default function Students() {
                                             <td>{student.studentName}</td>
                                             <td>{student.studentId}</td>
                                             <td>{student.studentCourse}</td>
-                                            <td>{student.studentEmail}</td>
-                                            <td>{student.studentPhoneNo}</td>
-                                            <td>{student.studentHomeAdd}</td>
+                                            <td className='no-show-sm'>{student.studentEmail}</td>
+                                            <td className='no-show-sm'>{student.studentPhoneNo}</td>
+                                            <td className='no-show-sm'>{student.studentHomeAdd}</td>
                                             <td>
                                                 <Space>
                                                     <Button type="dashed" icon={<DeleteOutlined />} onClick={() => handleDelete(student.id)} danger />
@@ -273,7 +273,7 @@ export default function Students() {
                         </Col>
                         <Col span={24}>
                             <label><b className='text-danger'>*</b>Student Course </label>
-                            <select className='form-control mb-3' name="studentCourse" value={state.studentCourse} onChange={handleChange} placeholder="Ehoose the course">
+                            <select className='form-select mb-3' name="studentCourse" value={state.studentCourse} onChange={handleChange} placeholder="Ehoose the course">
                                 {
                                     dbCourses.filter((course) => {
                                         return course.courseStatus === 'active'
@@ -337,7 +337,7 @@ export default function Students() {
                         </Col>
                         <Col span={24}>
                             <label><b className='text-danger'>*</b> Student Course</label>
-                            <select name="studentCourse" className='form-control mb-3'  onChange={handleEditChange}>
+                            <select name="studentCourse" className='form-select mb-3' onChange={handleEditChange}>
                                 <option disabled>Select student course</option>
                                 {
                                     dbCourses.map((course, i) => {
@@ -352,13 +352,13 @@ export default function Students() {
                         </Col>
                         <Col span={12}>
                             <label><b className='text-danger'>*</b> Student Phone No</label>
-                            <input type="text" className='form-control mb-3' name='studentPhoneNo'  onChange={handleEditChange} value={editStudent.studentPhoneNo} />
+                            <input type="text" className='form-control mb-3' name='studentPhoneNo' onChange={handleEditChange} value={editStudent.studentPhoneNo} />
                         </Col>
                     </Row>
                     <Row gutter={16}>
                         <Col span={24}>
                             <label><b className='text-danger'>*</b> Student Postal Address</label>
-                            <textarea type="text" className='form-control mb-3'  onChange={handleEditChange} value={editStudent.studentHomeAdd} />
+                            <textarea type="text" className='form-control mb-3' onChange={handleEditChange} value={editStudent.studentHomeAdd} />
                         </Col>
                     </Row>
                 </Form>
