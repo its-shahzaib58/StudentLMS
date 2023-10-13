@@ -150,7 +150,7 @@ export default function Dashboard() {
           <Col lg={{ span: 8, offset: 1 }} sm={{ span: 20, offset: 2 }}>
                 <Divider>Today Students Attendance Chart</Divider>
             <CChart
-              id='studentAttChart'
+              className='studentAttChart'
               type="doughnut"
               customTooltips={true}
               data={{

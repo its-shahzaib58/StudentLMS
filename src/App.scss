@@ -43,11 +43,13 @@
     background-color: rgb(197, 197, 7);
     }
 }
-#studentAttChart{
+.studentAttChart{
+
     .chartjs-tooltip{
         display: flex;
         justify-content: center;
         align-items: center;
+
         &::after{
             content: '%';
         }
