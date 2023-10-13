@@ -17,7 +17,7 @@ export default function Sider() {
                 </Divider>
             </div>
             <Typography.Title level={5}>
-                Menu's
+            <i className="bi bi-list"></i>   Menu
             </Typography.Title>
             
             <Menu className='bg-light'
@@ -47,9 +47,9 @@ export default function Sider() {
                     {
                         label: 'Attendance',
                         key: '/attendance',
-                        icon: <i className="bi bi-calendar-check"></i>,
+                        icon: <i className="bi bi-calendar-check"></i>
                     },
-
+                    
                 ]} />
         </div>
     )

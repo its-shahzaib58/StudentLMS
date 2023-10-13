@@ -262,7 +262,7 @@ export default function Courses() {
                         </Col>
                         <Col span={24}>
                             <label><b className='text-danger'>*</b>Course Status </label>
-                            <select className='form-control mb-4' name="courseStatus" onChange={handleChange} placeholder="Please choose the course status">
+                            <select className='form-select mb-4' name="courseStatus" onChange={handleChange} placeholder="Please choose the course status">
                                 <option selected disabled>Select course status</option>
                                 <option value="active">Active</option>
                                 <option value="unactive">Unactive</option>
