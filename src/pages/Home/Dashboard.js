@@ -65,10 +65,11 @@ export default function Dashboard() {
     }).length;
     setTodayLeave(todayLeaveStatus)
     // Total No Mark Attendance 
-    const totalStudents = dbStudents.length - todayPrensentStatus-todayAbsentStatus-todayLeaveStatus;
+    var totalStudents = dbStudents.length - todayPrensentStatus-todayAbsentStatus-todayLeaveStatus;
+    console.log(totalStudents/100*100)
 
-    setTodayNoMark(totalStudents/dbStudents.length*100)
-    console.log()
+    totalStudents = totalStudents/dbStudents.length*100
+    setTodayNoMark(totalStudents)
   }, 100)
   return (
     <>
@@ -100,8 +101,8 @@ export default function Dashboard() {
           </Col>
         </Row>
         <Row>
-          <Col lg={{ span: 12, offset: 0 }} sm={{ span: 20, offset: 2 }}>
-          <Divider>Join Students Chart</Divider>
+          <Col lg={{ span: 15, offset: 0 }} sm={{ span: 20, offset: 2 }}>
+          <Divider>Join Students Graph</Divider>
             <CChart
               type="bar"
               height={150}
@@ -145,8 +146,8 @@ export default function Dashboard() {
               }}
             />
           </Col>
-          <Col lg={{ span: 10, offset: 1 }} sm={{ span: 20, offset: 2 }}>
-                <Divider>Students Attendance Chart</Divider>
+          <Col lg={{ span: 8, offset: 1 }} sm={{ span: 20, offset: 2 }}>
+                <Divider>Today Students Attendance Chart</Divider>
             <CChart
               type="doughnut"
               data={{

@@ -1,16 +1,19 @@
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
-import { Button, Col, Drawer, Empty, Form, Row, Space, message } from 'antd'
+import { Button, Col, Drawer, Empty, Form, Popconfirm, Row, Space, message } from 'antd'
 import Search from 'antd/es/input/Search'
 import { firestore } from 'config/firebase';
+import { useAttendanceContext } from 'contexts/AttendanceContext';
 import { useCourseContext } from 'contexts/CourseContext';
 import { useStudentContext } from 'contexts/StudentContext';
+import dayjs from 'dayjs';
 
-import { addDoc, collection, deleteDoc, doc, updateDoc, } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, getDocs, query, updateDoc, where, } from 'firebase/firestore';
 import React, { useState } from 'react';
 const initState = { studentName: '', studentId: '', studentCourse: '', studentEmail: '', studentPhoneNo: '', studentHomeAdd: '' }
 
 export default function Students() {
     const { dbCourses } = useCourseContext()
+    const { dbAttendance, setDbAttendance } = useAttendanceContext()
     const { dbStudents, setDbStudents } = useStudentContext()
     const [form] = Form.useForm();
     const [isSubmitLoading, setSubmitLoading] = useState(false);
@@ -93,6 +96,8 @@ export default function Students() {
         }
 
     }
+    // Delete Student Function
+
     const handleDelete = async (id) => {
         try {
             await deleteDoc(doc(firestore, "students", id));
@@ -100,6 +105,18 @@ export default function Students() {
                 return student.id !== id
             })
             setDbStudents(afterDeleteStudent)
+            // Delete Student All Attendance
+            const deleteAtt = dbAttendance.filter((att) => {
+                return att.studentId === id
+            })
+            deleteAtt.map((att) => {
+                deleteDoc(doc(firestore, 'attendance', att.id))
+            })
+            const afterDeleteAtt = dbAttendance.filter((att) => {
+                return att.studentId !== id
+            })
+            setDbAttendance(afterDeleteAtt)
+
             message.success("Student Deleted Successfully")
         } catch (e) {
             console.log(e.error)
@@ -216,8 +233,16 @@ export default function Students() {
                                             <td className='no-show-sm'>{student.studentHomeAdd}</td>
                                             <td>
                                                 <Space>
-                                                    <Button type="dashed" icon={<DeleteOutlined />} onClick={() => handleDelete(student.id)} danger />
-                                                    <Button type="dashed" onClick={() => handleEdit(student.id)} icon={<EditOutlined />} />
+                                                    <Popconfirm
+                                                        title="Delete the Student"
+                                                        description="Are you sure to delete this student after deletion remove every data of student attendance etc."
+                                                        onConfirm={() => handleDelete(student.id)}
+                                                        okText="Yes"
+
+                                                    >
+                                                        <Button type="dashed" icon={<DeleteOutlined />}  danger />
+                                                    </Popconfirm >
+                                                        <Button type="dashed" onClick={() => handleEdit(student.id)} icon={<EditOutlined />} />
                                                 </Space>
                                             </td>
                                         </tr>)
