@@ -8,8 +8,11 @@ import { CChart } from '@coreui/react-chartjs';
 import { useStudentContext } from 'contexts/StudentContext';
 import { useAttendanceContext } from 'contexts/AttendanceContext';
 import dayjs from 'dayjs';
+import { useAuthContext } from 'contexts/AuthContext';
+import { CSpinner } from '@coreui/react';
 
 export default function Dashboard() {
+  const { isAppLoading } = useAuthContext()
   const { dbCourses } = useCourseContext()
   const { dbStudents } = useStudentContext()
   const {dbAttendance} = useAttendanceContext()
