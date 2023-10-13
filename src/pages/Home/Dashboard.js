@@ -49,6 +49,7 @@ export default function Dashboard() {
     }).map((status)=>{
       return status.status
     }).length;
+
     setTodayPresent(todayPrensentStatus)
     // Total Absent Students
     const todayAbsentStatus = dbAttendance.filter((status)=>{
@@ -150,12 +151,13 @@ export default function Dashboard() {
                 <Divider>Today Students Attendance Chart</Divider>
             <CChart
               type="doughnut"
+              customTooltips={true}
               data={{
                 labels: ['Present', 'Absent', 'Leave','No Mark Attendance'],
                 datasets: [
                   {
                     backgroundColor: ['#62BC47', '#DC3545','#FFC107','#6C757D'],
-                    data: [todayPrensent/dbStudents.length*100, todayAbsent/dbStudents.length*100, todayLeave/dbStudents.length*100, todayNoMark],
+                    data: [Math.round(todayPrensent/dbStudents.length*100), Math.round(todayAbsent/dbStudents.length*100), Math.round(todayLeave/dbStudents.length*100), Math.round(todayNoMark)],
                   },
                 ],
               }}

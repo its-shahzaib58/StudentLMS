@@ -1,5 +1,6 @@
 
 @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css");
+
 @import 'scss/bootstrap';
 @import 'scss/auth';
 @import 'scss/sidebar';
@@ -40,5 +41,13 @@
 .list-hover{
     :hover{
     background-color: rgb(197, 197, 7);
+    }
+}
+.chartjs-tooltip{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    &::after{
+        content: '%';
     }
 }
